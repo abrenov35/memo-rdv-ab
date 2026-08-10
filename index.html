@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1267d6" />
+  <title>AB MÉMO RDV</title>
+  <style>
+    :root{--blue:#1267d6;--blue2:#0d56b7;--bg:#f4f6f8;--card:#fff;--txt:#1d2733;--muted:#6c7886;--line:#dfe5eb;--ok:#138a4b;--danger:#c93434}
+    *{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--txt)}
+    .app{max-width:520px;margin:0 auto;min-height:100vh;padding-bottom:28px}.top{background:var(--blue);color:#fff;padding:18px 16px 16px;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px #0002}.top h1{margin:0;font-size:22px}.top p{margin:4px 0 0;font-size:13px;opacity:.9}
+    .wrap{padding:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}.title{font-weight:700;font-size:17px;margin-bottom:10px}.muted{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+    label{display:block;font-size:13px;font-weight:700;margin:8px 0 5px}input,select,textarea{width:100%;border:1px solid var(--line);border-radius:11px;background:#fff;padding:12px;font-size:16px}textarea{min-height:84px;resize:vertical}
+    button{border:0;border-radius:13px;padding:13px 14px;font-size:15px;font-weight:700;cursor:pointer}.primary{background:var(--blue);color:#fff;width:100%}.secondary{background:#eef4fb;color:var(--blue)}.danger{background:#feecec;color:var(--danger)}.action{background:#fff;border:1px solid var(--line);min-height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px}.action span{font-size:26px}
+    .hidden{display:none!important}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.pill{display:inline-block;border-radius:999px;padding:5px 9px;background:#e8f1ff;color:var(--blue);font-size:12px;font-weight:700}.timer{font-size:34px;font-weight:800;text-align:center;margin:12px 0 4px}.rec{text-align:center;color:var(--danger);font-weight:700;font-size:13px}.mic{width:84px;height:84px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:14px auto;background:var(--blue);color:#fff;font-size:30px}.mic.paused{background:#d8dee6;color:#3e4a57}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px;text-align:center}.stat b{display:block;font-size:22px}.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#17202a;color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;max-width:90%;z-index:99}.small{font-size:12px}.note{padding:10px;border-left:3px solid var(--blue);background:#f7faff;border-radius:8px;margin-top:8px}.footerBtn{position:sticky;bottom:0;background:linear-gradient(to top,var(--bg) 70%,transparent);padding-top:10px}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="top"><h1>AB MÉMO RDV</h1><p>Dictée · Photos · Métrés · Rapport IA</p></header>
+  <main class="wrap">
+    <section id="startView" class="card">
+      <div class="title">Nouveau rendez-vous</div>
+      <label>Client</label><input id="client" placeholder="Nom du client" />
+      <label>Téléphone</label><input id="telephone" inputmode="tel" placeholder="06..." />
+      <label>Adresse chantier</label><input id="adresse" placeholder="Adresse" />
+      <div class="grid">
+        <div><label>Type de projet</label><select id="typeProjet"><option>Rénovation</option><option>Sinistre</option><option>Salle de bains</option><option>Cuisine</option><option>Autre</option></select></div>
+        <div><label>Objet</label><input id="objet" placeholder="Visite initiale" /></div>
+      </div>
+      <button id="startRdv" class="primary" style="margin-top:14px">Démarrer le RDV</button>
+    </section>
+
+    <section id="rdvView" class="hidden">
+      <div class="card">
+        <div class="row"><div><div id="clientTitle" class="title" style="margin:0">Client</div><div id="rdvId" class="muted"></div></div><span id="status" class="pill">EN COURS</span></div>
+        <div id="timer" class="timer">00:00:00</div><div id="recState" class="rec">● ENREGISTREMENT AUDIO</div>
+        <button id="pauseBtn" class="mic" aria-label="Pause">⏸</button>
+        <div class="muted" style="text-align:center">Appuyer pour pause / reprendre</div>
+      </div>
+
+      <div class="grid3">
+        <button id="photoBtn" class="action"><span>📷</span>Photo</button>
+        <button id="metreBtn" class="action"><span>📐</span>Métré</button>
+        <button id="pointBtn" class="action"><span>📍</span>Point</button>
+      </div>
+      <input id="photoInput" type="file" accept="image/*" capture="environment" class="hidden" />
+
+      <div class="stats" style="margin:12px 0"><div class="stat"><b id="photoCount">0</b><span class="muted">Photos</span></div><div class="stat"><b id="metreCount">0</b><span class="muted">Métrés</span></div><div class="stat"><b id="pointCount">0</b><span class="muted">Points</span></div></div>
+
+      <div id="metreCard" class="card hidden">
+        <div class="title">Nouveau métré</div>
+        <label>Pièce</label><input id="mPiece" placeholder="Cuisine, SDB..." />
+        <label>Type</label><select id="mType"><option>Surface</option><option>Longueur</option><option>Mur</option><option>Sol</option><option>Plafond</option><option>Ouverture</option></select>
+        <label>Désignation</label><input id="mDesignation" placeholder="Mur principal" />
+        <div class="grid"><div><label>Longueur (m)</label><input id="mL" type="number" step="0.01" inputmode="decimal" /></div><div><label>Largeur (m)</label><input id="mW" type="number" step="0.01" inputmode="decimal" /></div></div>
+        <label>Hauteur (m)</label><input id="mH" type="number" step="0.01" inputmode="decimal" />
+        <div class="grid" style="margin-top:12px"><button id="cancelMetre" class="secondary">Annuler</button><button id="saveMetre" class="primary">Enregistrer</button></div>
+      </div>
+
+      <div id="pointCard" class="card hidden">
+        <div class="title">Point important</div>
+        <label>Type</label><select id="pType"><option>À vérifier</option><option>Demande client</option><option>Décision</option><option>Choix client</option><option>Action AB RENOV</option><option>Information technique</option></select>
+        <label>Pièce</label><input id="pPiece" placeholder="Pièce concernée" />
+        <label>Description</label><textarea id="pDescription" placeholder="Ex. Vérifier si le mur est porteur"></textarea>
+        <div class="grid" style="margin-top:12px"><button id="cancelPoint" class="secondary">Annuler</button><button id="savePoint" class="primary">Enregistrer</button></div>
+      </div>
+
+      <div class="card"><div class="title">Journal du RDV</div><div id="journal" class="muted">Le rendez-vous vient de démarrer.</div></div>
+
+      <div class="footerBtn"><button id="finishBtn" class="primary">✓ Terminer le RDV</button></div>
+    </section>
+  </main>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script>
+const API_URL='https://script.google.com/macros/s/AKfycbzq2sNhxV9PnOktzS8UUIypcvguyc58s8GMd_3D4VjSxUirx-XR-3bsC_yF9zFGNWqGww/exec';
+let state={idRdv:null,start:null,paused:false,pauseStarted:null,totalPause:0,mediaRecorder:null,stream:null,audioChunks:[],photos:0,metres:0,points:0};
+const $=id=>document.getElementById(id);
+function toast(msg){$('toast').textContent=msg;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2600)}
+async function api(data){const body=new URLSearchParams();Object.entries(data).forEach(([k,v])=>{if(v!==undefined&&v!==null)body.append(k,String(v))});const r=await fetch(API_URL,{method:'POST',body});const txt=await r.text();let j;try{j=JSON.parse(txt)}catch{throw new Error('Réponse API invalide')};if(!j.ok)throw new Error(j.error||'Erreur API');return j}
+function addJournal(txt){const d=document.createElement('div');d.className='note';d.textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+' · '+txt;$('journal').prepend(d)}
+function fmt(sec){sec=Math.max(0,Math.floor(sec));const h=String(Math.floor(sec/3600)).padStart(2,'0'),m=String(Math.floor(sec%3600/60)).padStart(2,'0'),s=String(sec%60).padStart(2,'0');return `${h}:${m}:${s}`}
+setInterval(()=>{if(!state.start)return;let pause=state.totalPause;if(state.paused&&state.pauseStarted)pause+=(Date.now()-state.pauseStarted);$('timer').textContent=fmt((Date.now()-state.start-pause)/1000)},500);
+async function startAudio(){try{state.stream=await navigator.mediaDevices.getUserMedia({audio:true});state.mediaRecorder=new MediaRecorder(state.stream);state.audioChunks=[];state.mediaRecorder.ondataavailable=e=>{if(e.data.size)state.audioChunks.push(e.data)};state.mediaRecorder.start();addJournal('Enregistrement audio démarré.')}catch(e){toast('Micro non autorisé : le RDV continue sans audio');$('recState').textContent='MICRO NON ACTIF'} }
+$('startRdv').addEventListener('click',async()=>{const client=$('client').value.trim();if(!client){toast('Indique le nom du client');return}try{$('startRdv').disabled=true;const r=await api({action:'createRdv',client,telephone:$('telephone').value,adresseChantier:$('adresse').value,typeProjet:$('typeProjet').value,objetRdv:$('objet').value||'Rendez-vous client',commercial:'Younès'});state.idRdv=r.idRdv;state.start=Date.now();$('clientTitle').textContent=client;$('rdvId').textContent=r.idRdv;$('startView').classList.add('hidden');$('rdvView').classList.remove('hidden');await startAudio();}catch(e){toast(e.message)}finally{$('startRdv').disabled=false}});
+$('pauseBtn').addEventListener('click',()=>{if(!state.idRdv)return;state.paused=!state.paused;if(state.paused){state.pauseStarted=Date.now();if(state.mediaRecorder&&state.mediaRecorder.state==='recording')state.mediaRecorder.pause();$('pauseBtn').textContent='▶';$('pauseBtn').classList.add('paused');$('status').textContent='PAUSE';$('recState').textContent='EN PAUSE';addJournal('Pause.')}else{if(state.pauseStarted){state.totalPause+=Date.now()-state.pauseStarted;state.pauseStarted=null}if(state.mediaRecorder&&state.mediaRecorder.state==='paused')state.mediaRecorder.resume();$('pauseBtn').textContent='⏸';$('pauseBtn').classList.remove('paused');$('status').textContent='EN COURS';$('recState').textContent='● ENREGISTREMENT AUDIO';addJournal('Enregistrement repris.')}});
+$('metreBtn').addEventListener('click',()=>{$('metreCard').classList.remove('hidden');$('pointCard').classList.add('hidden')});$('cancelMetre').addEventListener('click',()=>$('metreCard').classList.add('hidden'));
+$('saveMetre').addEventListener('click',async()=>{try{const l=$('mL').value,w=$('mW').value;await api({action:'addMetre',idRdv:state.idRdv,piece:$('mPiece').value,typeMetre:$('mType').value,designation:$('mDesignation').value,longueur_m:l,largeur_m:w,hauteur_m:$('mH').value,unite:$('mType').value==='Longueur'?'ml':'m²'});state.metres++;$('metreCount').textContent=state.metres;addJournal('Métré enregistré : '+($('mPiece').value||'sans pièce')+(l&&w?` · ${l} × ${w} m`:''));$('metreCard').classList.add('hidden');toast('Métré enregistré');}catch(e){toast(e.message)}});
+$('pointBtn').addEventListener('click',()=>{$('pointCard').classList.remove('hidden');$('metreCard').classList.add('hidden')});$('cancelPoint').addEventListener('click',()=>$('pointCard').classList.add('hidden'));
+$('savePoint').addEventListener('click',async()=>{const desc=$('pDescription').value.trim();if(!desc){toast('Écris le point à retenir');return}try{await api({action:'addPoint',idRdv:state.idRdv,type:$('pType').value,piece:$('pPiece').value,description:desc,priorite:'Normale',important:true});state.points++;$('pointCount').textContent=state.points;addJournal('Point : '+desc);$('pointCard').classList.add('hidden');$('pDescription').value='';toast('Point enregistré');}catch(e){toast(e.message)}});
+$('photoBtn').addEventListener('click',()=>$('photoInput').click());
+$('photoInput').addEventListener('change',async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;try{toast('Envoi de la photo...');const base64=await compressImage(file,1280,.72);await api({action:'addPhoto',idRdv:state.idRdv,base64,mimeType:'image/jpeg',nomFichier:`${state.idRdv}_${Date.now()}.jpg`});state.photos++;$('photoCount').textContent=state.photos;addJournal('Photo '+state.photos+' enregistrée.');toast('Photo enregistrée');}catch(err){toast(err.message)}finally{e.target.value=''}});
+function compressImage(file,maxW,quality){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{let w=img.width,h=img.height;if(w>maxW){h=Math.round(h*maxW/w);w=maxW}const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(url);resolve(c.toDataURL('image/jpeg',quality))};img.onerror=reject;img.src=url})}
+$('finishBtn').addEventListener('click',async()=>{if(!confirm('Terminer ce rendez-vous ?'))return;try{if(state.mediaRecorder&&state.mediaRecorder.state!=='inactive')state.mediaRecorder.stop();if(state.stream)state.stream.getTracks().forEach(t=>t.stop());await api({action:'finishRdv',idRdv:state.idRdv});$('status').textContent='TERMINÉ';$('finishBtn').disabled=true;$('finishBtn').textContent='RDV terminé';addJournal('Rendez-vous terminé.');toast('RDV sauvegardé');}catch(e){toast(e.message)}});
+</script>
+</body>
+</html>
