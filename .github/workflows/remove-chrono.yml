@@ -1,0 +1,36 @@
+name: Remove chrono V1.6.3
+
+on:
+  push:
+    paths:
+      - '.github/workflows/remove-chrono.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Hide chrono and bump version
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('.timer{text-align:center;font-size:30px;font-weight:900;margin:6px 0}', '.timer{display:none;text-align:center;font-size:30px;font-weight:900;margin:6px 0}')
+          s = s.replace('<span class="ver">V1.6.2</span>', '<span class="ver">V1.6.3</span>')
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit V1.6.3
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "V1.6.3: remove chrono from RDV screen"
+          git push origin main
