@@ -1,0 +1,33 @@
+name: Inject metric patch
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'metric-patch.js'
+      - '.github/workflows/inject-metric-patch.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inject metric module
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          tag='<script src="metric-patch.js?v=312"></script>'
+          if tag not in s:
+              s=s.replace('</body>', tag+'</body>')
+          s=s.replace('V3.1.1','V3.1.2')
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "AB Memo Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "V3.1.2 improve metric dictation modal"
+          git push
